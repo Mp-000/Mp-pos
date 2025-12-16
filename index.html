@@ -13,7 +13,79 @@
   <h2 class="text-center">💼 Sistem Informasi Jasa & Produk</h2>
   <hr>
 
-  <!-- Form Produk -->
+  <!-- Modul User -->
+  <div class="card mb-3">
+    <div class="card-header">Tambah User</div>
+    <div class="card-body">
+      <form id="formUser">
+        <div class="row">
+          <div class="col-md-4">
+            <input type="text" id="namaUser" class="form-control" placeholder="Nama User" required>
+          </div>
+          <div class="col-md-4">
+            <input type="email" id="emailUser" class="form-control" placeholder="Email" required>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100">Tambah</button>
+          </div>
+        </div>
+      </form>
+      <table class="table mt-3" id="tabelUser">
+        <thead><tr><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modul Pelanggan -->
+  <div class="card mb-3">
+    <div class="card-header">Tambah Pelanggan</div>
+    <div class="card-body">
+      <form id="formPelanggan">
+        <div class="row">
+          <div class="col-md-4">
+            <input type="text" id="namaPelanggan" class="form-control" placeholder="Nama Pelanggan" required>
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="telpPelanggan" class="form-control" placeholder="No. Telp" required>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100">Tambah</button>
+          </div>
+        </div>
+      </form>
+      <table class="table mt-3" id="tabelPelanggan">
+        <thead><tr><th>Nama</th><th>Telp</th><th>Aksi</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modul Supplier -->
+  <div class="card mb-3">
+    <div class="card-header">Tambah Supplier</div>
+    <div class="card-body">
+      <form id="formSupplier">
+        <div class="row">
+          <div class="col-md-4">
+            <input type="text" id="namaSupplier" class="form-control" placeholder="Nama Supplier" required>
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="kontakSupplier" class="form-control" placeholder="Kontak Supplier" required>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100">Tambah</button>
+          </div>
+        </div>
+      </form>
+      <table class="table mt-3" id="tabelSupplier">
+        <thead><tr><th>Nama</th><th>Kontak</th><th>Aksi</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modul Produk -->
   <div class="card mb-3">
     <div class="card-header">Tambah Produk</div>
     <div class="card-body">
@@ -34,24 +106,10 @@
         </div>
       </form>
     </div>
-  </div>
-
-  <!-- Daftar Produk -->
-  <div class="card mb-3">
-    <div class="card-header">Daftar Produk</div>
-    <div class="card-body">
-      <table class="table table-bordered" id="tabelProduk">
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Harga</th>
-            <th>Kategori</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+    <table class="table mt-3" id="tabelProduk">
+      <thead><tr><th>Nama</th><th>Harga</th><th>Kategori</th><th>Aksi</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </div>
 
   <!-- Checkout -->
@@ -72,127 +130,63 @@
 </div>
 
 <script>
+  // LocalStorage Data
+  let userList = JSON.parse(localStorage.getItem("userList")) || [];
+  let pelangganList = JSON.parse(localStorage.getItem("pelangganList")) || [];
+  let supplierList = JSON.parse(localStorage.getItem("supplierList")) || [];
   let produkList = JSON.parse(localStorage.getItem("produkList")) || [];
   let transaksiList = JSON.parse(localStorage.getItem("transaksiList")) || [];
 
-  // Render Produk
-  function renderProduk() {
+  // Render Functions
+  function renderUser(){
+    const tbody = document.querySelector("#tabelUser tbody");
+    tbody.innerHTML="";
+    userList.forEach((u,i)=>{
+      tbody.innerHTML += `<tr><td>${u.nama}</td><td>${u.email}</td><td><button class="btn btn-sm btn-danger" onclick="hapusUser(${i})">Hapus</button></td></tr>`;
+    });
+  }
+  function renderPelanggan(){
+    const tbody = document.querySelector("#tabelPelanggan tbody");
+    tbody.innerHTML="";
+    pelangganList.forEach((p,i)=>{
+      tbody.innerHTML += `<tr><td>${p.nama}</td><td>${p.telp}</td><td><button class="btn btn-sm btn-danger" onclick="hapusPelanggan(${i})">Hapus</button></td></tr>`;
+    });
+  }
+  function renderSupplier(){
+    const tbody = document.querySelector("#tabelSupplier tbody");
+    tbody.innerHTML="";
+    supplierList.forEach((s,i)=>{
+      tbody.innerHTML += `<tr><td>${s.nama}</td><td>${s.kontak}</td><td><button class="btn btn-sm btn-danger" onclick="hapusSupplier(${i})">Hapus</button></td></tr>`;
+    });
+  }
+  function renderProduk(){
     const tbody = document.querySelector("#tabelProduk tbody");
-    tbody.innerHTML = "";
-    produkList.forEach((p, i) => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${p.nama}</td>
-          <td>Rp ${p.harga}</td>
-          <td>${p.kategori}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="hapusProduk(${i})">Hapus</button></td>
-        </tr>
-      `;
+    tbody.innerHTML="";
+    produkList.forEach((p,i)=>{
+      tbody.innerHTML += `<tr><td>${p.nama}</td><td>Rp ${p.harga}</td><td>${p.kategori}</td><td><button class="btn btn-sm btn-danger" onclick="hapusProduk(${i})">Hapus</button></td></tr>`;
     });
   }
 
-  // Tambah Produk
-  document.getElementById("formProduk").addEventListener("submit", e => {
+  // Add Functions
+  document.getElementById("formUser").addEventListener("submit",e=>{
     e.preventDefault();
-    const nama = document.getElementById("namaProduk").value;
-    const harga = parseFloat(document.getElementById("hargaProduk").value);
-    const kategori = document.getElementById("kategoriProduk").value;
-
-    produkList.push({nama, harga, kategori});
-    localStorage.setItem("produkList", JSON.stringify(produkList));
-    renderProduk();
-    Swal.fire("Berhasil!", "Produk ditambahkan", "success");
-    e.target.reset();
+    userList.push({nama:namaUser.value,email:emailUser.value});
+    localStorage.setItem("userList",JSON.stringify(userList));
+    renderUser(); e.target.reset();
   });
-
-  // Hapus Produk
-  function hapusProduk(i) {
-    produkList.splice(i,1);
-    localStorage.setItem("produkList", JSON.stringify(produkList));
-    renderProduk();
-  }
-
-  // Checkout
-  function checkout() {
-    if(produkList.length === 0) {
-      Swal.fire("Oops!", "Tidak ada produk untuk checkout", "error");
-      return;
-    }
-
-    Swal.fire({
-      title: "Pilih Metode Pembayaran",
-      input: "select",
-      inputOptions: {
-        "Tunai": "Tunai",
-        "QRIS": "QRIS",
-        "Cicilan": "Cicilan"
-      },
-      inputPlaceholder: "Pilih metode",
-      showCancelButton: true
-    }).then(result => {
-      if(result.isConfirmed) {
-        let metode = result.value;
-        let total = produkList.reduce((sum,p)=>sum+p.harga,0);
-
-        if(metode === "Cicilan") {
-          Swal.fire({
-            title: "Pilih Tenor Cicilan",
-            input: "select",
-            inputOptions: {
-              "1": "1 bulan (4.90%)",
-              "2": "2 bulan (4.80%)",
-              "3": "3 bulan (4.70%)",
-              "6": "6 bulan (4.55%)",
-              "9": "9 bulan (4.30%)",
-              "12": "12 bulan (4.10%)",
-              "18": "18 bulan (4.00%)",
-              "24": "24 bulan (3.70%)"
-            }
-          }).then(r2=>{
-            if(r2.isConfirmed){
-              let tenor = parseInt(r2.value);
-              let bunga = {1:4.90,2:4.80,3:4.70,6:4.55,9:4.30,12:4.10,18:4.00,24:3.70}[tenor];
-              let totalBunga = total + (total*bunga/100);
-              let cicilan = (totalBunga/tenor).toFixed(2);
-
-              transaksiList.push({tanggal:new Date().toLocaleDateString(), total, metode, tenor, cicilan});
-              localStorage.setItem("transaksiList", JSON.stringify(transaksiList));
-
-              Swal.fire("Berhasil!", `Total Rp ${totalBunga} dibayar ${tenor}x cicilan Rp ${cicilan}`, "success");
-              updateChart();
-            }
-          });
-        } else {
-          transaksiList.push({tanggal:new Date().toLocaleDateString(), total, metode});
-          localStorage.setItem("transaksiList", JSON.stringify(transaksiList));
-          Swal.fire("Berhasil!", `Total Rp ${total} dibayar dengan ${metode}`, "success");
-          updateChart();
-        }
-      }
-    });
-  }
-
-  // Chart Laporan
-  function updateChart() {
-    let ctx = document.getElementById("laporanChart");
-    let labels = transaksiList.map(t=>t.tanggal);
-    let data = transaksiList.map(t=>t.total);
-
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "Total Penjualan",
-          data: data,
-          backgroundColor: "rgba(75,192,192,0.6)"
-        }]
-      }
-    });
-  }
-
-  renderProduk();
-  updateChart();
-</script>
-</body>
-</html>
+  document.getElementById("formPelanggan").addEventListener("submit",e=>{
+    e.preventDefault();
+    pelangganList.push({nama:namaPelanggan.value,telp:telpPelanggan.value});
+    localStorage.setItem("pelangganList",JSON.stringify(pelangganList));
+    renderPelanggan(); e.target.reset();
+  });
+  document.getElementById("formSupplier").addEventListener("submit",e=>{
+    e.preventDefault();
+    supplierList.push({nama:namaSupplier.value,kontak:kontakSupplier.value});
+    localStorage.setItem("supplierList",JSON.stringify(supplierList));
+    renderSupplier(); e.target.reset();
+  });
+  document.getElementById("formProduk").addEventListener("submit",e=>{
+    e.preventDefault();
+    produkList.push({nama:namaProduk.value,harga:parseFloat(hargaProduk.value),kategori:kategoriProduk.value});
+    localStorage.setItem("produk
