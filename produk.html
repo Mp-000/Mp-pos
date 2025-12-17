@@ -10,7 +10,7 @@
 <body class="bg-light">
 
 <script>
-// ================= AUTH =================
+// ===== AUTH =====
 const loginUser = JSON.parse(localStorage.getItem('loginUser'));
 if(!loginUser || !['Super Admin','Admin'].includes(loginUser.role)){
   location.href='login.html';
@@ -25,20 +25,24 @@ if(!loginUser || !['Super Admin','Admin'].includes(loginUser.role)){
 </nav>
 
 <div class="container mt-3">
+
+  <!-- FORM PRODUK -->
   <div class="card shadow">
-    <div class="card-header bg-primary text-white">Tambah Produk</div>
+    <div class="card-header bg-primary text-white">Tambah / Edit Produk</div>
     <div class="card-body">
       <div class="row g-2">
         <div class="col-md-3"><input id="nama" class="form-control" placeholder="Nama Produk"></div>
-        <div class="col-md-2"><input id="kategori" class="form-control" placeholder="Kategori"></div>
-        <div class="col-md-2"><input id="beli" type="number" class="form-control" placeholder="Harga Beli"></div>
-        <div class="col-md-2"><input id="jual" type="number" class="form-control" placeholder="Harga Jual"></div>
+        <div class="col-md-2"><select id="kategori" class="form-select"></select></div>
+        <div class="col-md-2"><select id="supplier" class="form-select"></select></div>
+        <div class="col-md-1"><input id="beli" type="number" class="form-control" placeholder="Beli"></div>
+        <div class="col-md-1"><input id="jual" type="number" class="form-control" placeholder="Jual"></div>
         <div class="col-md-1"><input id="stok" type="number" class="form-control" placeholder="Stok"></div>
-        <div class="col-md-2"><button class="btn btn-success w-100" onclick="saveProduct()">Simpan</button></div>
+        <div class="col-md-2"><button class="btn btn-success w-100" onclick="simpan()">Simpan</button></div>
       </div>
     </div>
   </div>
 
+  <!-- TABLE -->
   <div class="card shadow mt-3">
     <div class="card-header bg-dark text-white">Daftar Produk</div>
     <div class="card-body">
@@ -48,7 +52,8 @@ if(!loginUser || !['Super Admin','Admin'].includes(loginUser.role)){
             <th>#</th>
             <th>Nama</th>
             <th>Kategori</th>
-            <th>Harga Jual</th>
+            <th>Supplier</th>
+            <th>Harga</th>
             <th>Stok</th>
             <th>Aksi</th>
           </tr>
@@ -57,20 +62,32 @@ if(!loginUser || !['Super Admin','Admin'].includes(loginUser.role)){
       </table>
     </div>
   </div>
+
 </div>
 
 <script>
 let products = JSON.parse(localStorage.getItem('products')) || [];
-let editId = null;
+let kategoriList = JSON.parse(localStorage.getItem('kategori')) || [];
+let supplierList = JSON.parse(localStorage.getItem('suppliers')) || [];
+let editIndex = null;
+
+function loadSelect(){
+  kategori.innerHTML = '<option value="">Kategori</option>';
+  kategoriList.forEach(k=> kategori.innerHTML += `<option>${k}</option>`);
+
+  supplier.innerHTML = '<option value="">Supplier</option>';
+  supplierList.forEach(s=> supplier.innerHTML += `<option>${s.nama}</option>`);
+}
 
 function render(){
-  table.innerHTML='';
+  table.innerHTML = '';
   products.forEach((p,i)=>{
     table.innerHTML += `
       <tr>
         <td>${i+1}</td>
         <td>${p.nama}</td>
         <td>${p.kategori}</td>
+        <td>${p.supplier}</td>
         <td>Rp ${p.jual}</td>
         <td>${p.stok}</td>
         <td>
@@ -82,44 +99,49 @@ function render(){
   localStorage.setItem('products', JSON.stringify(products));
 }
 
-function saveProduct(){
+function simpan(){
   if(!nama.value || !jual.value){
-    Swal.fire('Error','Lengkapi data','error'); return;
+    Swal.fire('Error','Nama & harga jual wajib diisi','error'); return;
   }
+
   const data = {
-    nama:nama.value,
-    kategori:kategori.value,
-    beli:+beli.value,
-    jual:+jual.value,
-    stok:+stok.value
+    nama: nama.value,
+    kategori: kategori.value,
+    supplier: supplier.value,
+    beli: +beli.value,
+    jual: +jual.value,
+    stok: +stok.value
   };
-  if(editId===null) products.push(data);
-  else products[editId]=data;
+
+  if(editIndex === null) products.push(data);
+  else products[editIndex] = data;
 
   Swal.fire('Berhasil','Produk disimpan','success');
-  editId=null;
   document.querySelectorAll('input').forEach(i=>i.value='');
+  kategori.value = supplier.value = '';
+  editIndex = null;
   render();
 }
 
 function edit(i){
   const p = products[i];
-  nama.value=p.nama;
-  kategori.value=p.kategori;
-  beli.value=p.beli;
-  jual.value=p.jual;
-  stok.value=p.stok;
-  editId=i;
+  nama.value = p.nama;
+  kategori.value = p.kategori;
+  supplier.value = p.supplier;
+  beli.value = p.beli;
+  jual.value = p.jual;
+  stok.value = p.stok;
+  editIndex = i;
 }
 
 function hapus(i){
-  Swal.fire({title:'Hapus?',icon:'warning',showCancelButton:true})
-  .then(res=>{
-    if(res.isConfirmed){ products.splice(i,1); render(); }
-  })
+  Swal.fire({title:'Hapus produk?',icon:'warning',showCancelButton:true})
+  .then(r=>{ if(r.isConfirmed){ products.splice(i,1); render(); } })
 }
 
 function logout(){ localStorage.removeItem('loginUser'); location.href='login.html'; }
+
+loadSelect();
 render();
 </script>
 </body>
