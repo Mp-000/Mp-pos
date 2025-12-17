@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>POS Transaksi - Enterprise</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-3">
+<h4>POS Transaksi</h4>
+
+<!-- PILIH PELANGGAN -->
+<div class="card shadow mb-3">
+  <div class="card-header bg-primary text-white">Pelanggan</div>
+  <div class="card-body">
+    <select id="pelanggan" class="form-select"></select>
+  </div>
+</div>
+
+<!-- PILIH PRODUK -->
+<div class="card shadow">
+  <div class="card-header bg-success text-white">Tambah Produk</div>
+  <div class="card-body row g-2">
+    <div class="col-md-5"><select id="produk" class="form-select"></select></div>
+    <div class="col-md-3"><input id="qty" type="number" class="form-control" placeholder="Qty"></div>
+    <div class="col-md-4"><button class="btn btn-success w-100" onclick="addCart()">Tambah ke Keranjang</button></div>
+  </div>
+</div>
+
+<!-- KERANJANG -->
+<div class="card shadow mt-3">
+  <div class="card-header bg-dark text-white">Keranjang</div>
+  <div class="card-body">
+    <table class="table table-bordered table-sm">
+      <thead>
+        <tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th><th>Aksi</th></tr>
+      </thead>
+      <tbody id="cart"></tbody>
+    </table>
+    <h5>Total: Rp <span id="total">0</span></h5>
+  </div>
+</div>
+
+<!-- PEMBAYARAN -->
+<div class="card shadow mt-3">
+  <div class="card-header bg-warning">Pembayaran</div>
+  <div class="card-body">
+    <input id="invoice" class="form-control mb-2" readonly>
+    <select id="metode" class="form-select mb-2" onchange="ubahMetode()">
+      <option value="">Metode Pembayaran</option>
+      <option>Cash</option>
+      <option>Transfer</option>
+      <option>Cicilan</option>
+    </select>
+
+    <div id="cashBox" class="d-none mb-2">
+      <input id="bayar" type="number" class="form-control" placeholder="Bayar Cash">
+    </div>
+
+    <div id="tfBox" class="d-none mb-2">
+      <input id="ref" class="form-control" placeholder="No Referensi Transfer">
+    </div>
+
+    <div id="cicilBox" class="d-none mb-2">
+      <select id="tenor" class="form-select" onchange="hitungCicilan()">
+        <option value="">Tenor</option>
+        <option value="1">1 Bulan</option>
+        <option value="2">2 Bulan</option>
+        <option value="3">3 Bulan</option>
+        <option value="6">6 Bulan</option>
+        <option value="9">9 Bulan</option>
+        <option value="12">12 Bulan</option>
+        <option value="18">18 Bulan</option>
+        <option value="24">24 Bulan</option>
+      </select>
+      <div id="rincian" class="mt-2"></div>
+    </div>
+
+    <button class="btn btn-success w-100" onclick="checkout()">Simpan Transaksi</button>
+  </div>
+</div>
+</div>
+
+<script>
+const products = JSON.parse(localStorage.getItem('products')) || [];
+const pelangganData = JSON.parse(localStorage.getItem('pelanggan')) || [];
+let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+let cartData = [];
+const bunga={1:4.9,2:4.8,3:4.7,6:4.5,9:4.35,12:4.05,18:3.9,24:3.75};
+
+invoice.value='INV-'+Date.now();
+
+function load(){
+ pelanggan.innerHTML='<option value="">Pilih Pelanggan</option>';
+ pelangganData.forEach(p=>pelanggan.innerHTML+=`<option>${p.nama}</option>`);
+
+ produk.innerHTML='<option value="">Pilih Produk</option>';
+ products.forEach(p=>produk.innerHTML+=`<option>${p.nama}</option>`);
+}
+
+function addCart(){
+ const p=products.find(x=>x.nama===produk.value);
+ if(!p||qty.value<=0||p.stok<qty.value) return;
+ cartData.push({...p,qty:+qty.value});
+ p.stok-=+qty.value;
+ localStorage.setItem('products',JSON.stringify(products));
+ renderCart();
+}
+
+function renderCart(){
+ cart.innerHTML=''; let tot=0;
+ cartData.forEach((c,i)=>{
+  const sub=c.jual*c.qty; tot+=sub;
+  cart.innerHTML+=`<tr><td>${c.nama}</td><td>${c.qty}</td><td>${c.jual}</td><td>${sub}</td><td><button class='btn btn-danger btn-sm' onclick='del(${i})'>X</button></td></tr>`;
+ });
+ total.innerText=tot;
+}
+
+function del(i){cartData.splice(i,1);renderCart();}
+
+function ubahMetode(){cashBox.classList.add('d-none');tfBox.classList.add('d-none');cicilBox.classList.add('d-none');
+ if(metode.value==='Cash') cashBox.classList.remove('d-none');
+ if(metode.value==='Transfer') tfBox.classList.remove('d-none');
+ if(metode.value==='Cicilan') cicilBox.classList.remove('d-none');}
+
+function hitungCicilan(){
+ const t=+total.innerText; const n=+tenor.value;
+ const admin=t*0.25; const bungaTot=t*(bunga[n]/100)*n;
+ const grand=t+admin+bungaTot; const per=Math.round(grand/n);
+ rincian.innerHTML=`Admin: Rp ${admin}<br>Total Kredit: Rp ${grand}<br>Cicilan/Bulan: Rp ${per}`;
+ return {grand};
+}
+
+function checkout(){
+ let status='Lunas',sisa=0;
+ if(metode.value==='Cicilan'){const h=hitungCicilan();status='Belum Lunas';sisa=h.grand;}
+ transaksi.push({invoice:invoice.value,pelanggan:pelanggan.value,total:+total.innerText,metode:metode.value,status,sisa});
+ localStorage.setItem('transaksi',JSON.stringify(transaksi));
+ Swal.fire('Sukses','Transaksi berhasil','success').then(()=>location.reload());
+}
+
+load();
+</script>
+</body>
+  </html>
