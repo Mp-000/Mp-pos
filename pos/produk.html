@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Master Produk - POS Enterprise</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-3">
+  <h4>Master Produk</h4>
+
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">Tambah / Edit Produk</div>
+    <div class="card-body row g-2">
+      <div class="col-md-3"><input id="nama" class="form-control" placeholder="Nama Produk"></div>
+      <div class="col-md-2"><select id="kategori" class="form-select"></select></div>
+      <div class="col-md-2"><select id="supplier" class="form-select"></select></div>
+      <div class="col-md-2"><input id="beli" type="number" class="form-control" placeholder="Harga Beli"></div>
+      <div class="col-md-2"><input id="jual" type="number" class="form-control" placeholder="Harga Jual"></div>
+      <div class="col-md-1"><input id="stok" type="number" class="form-control" placeholder="Stok"></div>
+      <div class="col-md-12 mt-2"><button class="btn btn-success w-100" onclick="simpan()">Simpan Produk</button></div>
+    </div>
+  </div>
+
+  <div class="card shadow mt-3">
+    <div class="card-header bg-dark text-white">Daftar Produk</div>
+    <div class="card-body">
+      <table class="table table-bordered table-sm">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nama</th>
+            <th>Kategori</th>
+            <th>Supplier</th>
+            <th>Harga Jual</th>
+            <th>Stok</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let produk = JSON.parse(localStorage.getItem('products')) || [];
+let kategoriData = JSON.parse(localStorage.getItem('kategori')) || [];
+let supplierData = JSON.parse(localStorage.getItem('supplier')) || [];
+let editId = null;
+
+function loadMaster(){
+  kategori.innerHTML='<option value="">Kategori</option>';
+  kategoriData.filter(k=>k.status==='Aktif').forEach(k=>kategori.innerHTML+=`<option>${k.nama}</option>`);
+
+  supplier.innerHTML='<option value="">Supplier</option>';
+  supplierData.forEach(s=>supplier.innerHTML+=`<option>${s.nama}</option>`);
+}
+
+function render(){
+  table.innerHTML='';
+  produk.forEach((p,i)=>{
+    table.innerHTML+=`<tr>
+      <td>${i+1}</td>
+      <td>${p.nama}</td>
+      <td>${p.kategori}</td>
+      <td>${p.supplier}</td>
+      <td>Rp ${p.jual}</td>
+      <td>${p.stok}</td>
+      <td>
+        <button class='btn btn-warning btn-sm' onclick='edit(${i})'>Edit</button>
+        <button class='btn btn-danger btn-sm' onclick='hapus(${i})'>Hapus</button>
+      </td>
+    </tr>`;
+  });
+  localStorage.setItem('products', JSON.stringify(produk));
+}
+
+function simpan(){
+  if(!nama.value || !jual.value || !kategori.value){
+    Swal.fire('Error','Lengkapi data produk','error');
+    return;
+  }
+  const data = {
+    nama:nama.value,
+    kategori:kategori.value,
+    supplier:supplier.value,
+    beli:+beli.value,
+    jual:+jual.value,
+    stok:+stok.value
+  };
+
+  if(editId===null) produk.push(data);
+  else produk[editId]=data;
+
+  Swal.fire('Sukses','Produk disimpan','success');
+  editId=null;
+  document.querySelectorAll('input').forEach(i=>i.value='');
+  kategori.value=''; supplier.value='';
+  render();
+}
+
+function edit(i){
+  const p=produk[i];
+  nama.value=p.nama; kategori.value=p.kategori; supplier.value=p.supplier;
+  beli.value=p.beli; jual.value=p.jual; stok.value=p.stok;
+  editId=i;
+}
+
+function hapus(i){
+  Swal.fire({title:'Hapus produk?',icon:'warning',showCancelButton:true})
+  .then(r=>{ if(r.isConfirmed){ produk.splice(i,1); render(); } });
+}
+
+loadMaster(); render();
+</script>
+</body>
+  </html>
