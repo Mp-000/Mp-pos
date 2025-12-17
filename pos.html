@@ -10,147 +10,140 @@
 <body class="bg-light">
 
 <div class="container mt-3">
+  <h4 class="mb-3">POS Enterprise – Keranjang & Cicilan</h4>
+
+  <!-- PILIH PRODUK -->
   <div class="card shadow">
-    <div class="card-header bg-dark text-white">POS Enterprise – Cash | Transfer | Cicilan</div>
-    <div class="card-body">
-
-      <div class="row g-2">
-        <div class="col-md-4"><input id="invoice" class="form-control" readonly></div>
-        <div class="col-md-4"><input id="customer" class="form-control" placeholder="Nama Pelanggan"></div>
-        <div class="col-md-4">
-          <select id="metode" class="form-select" onchange="ubahMetode()">
-            <option value="">Metode Pembayaran</option>
-            <option value="Cash">Cash</option>
-            <option value="Transfer">Transfer</option>
-            <option value="Cicilan">Cicilan</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row g-2 mt-2">
-        <div class="col-md-4"><input id="total" type="number" class="form-control" placeholder="Total Transaksi"></div>
-        <div class="col-md-4 d-none" id="cashBox"><input id="bayar" type="number" class="form-control" placeholder="Bayar Cash"></div>
-        <div class="col-md-4 d-none" id="tfBox"><input id="bukti" class="form-control" placeholder="No Referensi Transfer"></div>
-        <div class="col-md-4 d-none" id="cicilBox">
-          <select id="tenor" class="form-select" onchange="hitungCicilan()">
-            <option value="">Tenor Cicilan</option>
-            <option value="1">1 Bulan – 4.90%</option>
-            <option value="3">3 Bulan – 4.70%</option>
-            <option value="6">6 Bulan – 4.50%</option>
-            <option value="12">12 Bulan – 4.05%</option>
-            <option value="24">24 Bulan – 3.75%</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="mt-3 d-none" id="rincian">
-        <p>Admin Fee (25%): <b id="admin"></b></p>
-        <p>Total Kredit: <b id="grand"></b></p>
-        <p>Cicilan / Bulan: <b id="perbulan"></b></p>
-      </div>
-
-      <button class="btn btn-success w-100 mt-3" onclick="simpan()">Simpan Transaksi</button>
+    <div class="card-header bg-primary text-white">Tambah ke Keranjang</div>
+    <div class="card-body row g-2">
+      <div class="col-md-4"><select id="produk" class="form-select"></select></div>
+      <div class="col-md-2"><input id="qty" type="number" class="form-control" placeholder="Qty"></div>
+      <div class="col-md-2"><button class="btn btn-success w-100" onclick="addCart()">Tambah</button></div>
     </div>
   </div>
 
+  <!-- KERANJANG -->
   <div class="card shadow mt-3">
-    <div class="card-header bg-primary text-white">Laporan Piutang</div>
+    <div class="card-header bg-dark text-white">Keranjang</div>
     <div class="card-body">
       <table class="table table-bordered table-sm">
         <thead>
-          <tr>
-            <th>Invoice</th>
-            <th>Pelanggan</th>
-            <th>Metode</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Sisa</th>
-          </tr>
+          <tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th><th>Aksi</th></tr>
         </thead>
-        <tbody id="table"></tbody>
+        <tbody id="cart"></tbody>
       </table>
+      <h5>Total: Rp <span id="total">0</span></h5>
     </div>
   </div>
 
+  <!-- PEMBAYARAN -->
+  <div class="card shadow mt-3">
+    <div class="card-header bg-secondary text-white">Pembayaran</div>
+    <div class="card-body">
+      <input id="invoice" class="form-control mb-2" readonly>
+      <select id="metode" class="form-select mb-2" onchange="ubahMetode()">
+        <option value="">Metode Pembayaran</option>
+        <option>Cash</option>
+        <option>Transfer</option>
+        <option>Cicilan</option>
+      </select>
+
+      <div id="cashBox" class="d-none"><input id="bayar" type="number" class="form-control" placeholder="Bayar Cash"></div>
+      <div id="tfBox" class="d-none"><input id="ref" class="form-control" placeholder="No Transfer"></div>
+      <div id="cicilBox" class="d-none mt-2">
+        <select id="tenor" class="form-select" onchange="hitungCicilan()">
+          <option value="">Tenor</option>
+          <option value="1">1 Bulan</option>
+          <option value="2">2 Bulan</option>
+          <option value="3">3 Bulan</option>
+          <option value="6">6 Bulan</option>
+          <option value="9">9 Bulan</option>
+          <option value="12">12 Bulan</option>
+          <option value="18">18 Bulan</option>
+          <option value="24">24 Bulan</option>
+        </select>
+        <div id="rincian" class="mt-2"></div>
+      </div>
+
+      <button class="btn btn-success w-100 mt-3" onclick="checkout()">Checkout</button>
+    </div>
+  </div>
+
+  <!-- LAPORAN PIUTANG -->
+  <div class="card shadow mt-3">
+    <div class="card-header bg-danger text-white">Laporan Piutang</div>
+    <div class="card-body">
+      <table class="table table-bordered table-sm">
+        <thead><tr><th>Invoice</th><th>Total Kredit</th><th>Sisa</th><th>Status</th></tr></thead>
+        <tbody id="piutang"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
+let products = JSON.parse(localStorage.getItem('products')) || [];
+let cartData = [];
 let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-const bunga = {1:4.9,3:4.7,6:4.5,12:4.05,24:3.75};
+const bunga={1:4.9,2:4.8,3:4.7,6:4.5,9:4.35,12:4.05,18:3.9,24:3.75};
 
-invoice.value = 'INV-' + Date.now();
+invoice.value='INV-'+Date.now();
 
-function ubahMetode(){
-  cashBox.classList.add('d-none');
-  tfBox.classList.add('d-none');
-  cicilBox.classList.add('d-none');
-  rincian.classList.add('d-none');
-
-  if(metode.value==='Cash') cashBox.classList.remove('d-none');
-  if(metode.value==='Transfer') tfBox.classList.remove('d-none');
-  if(metode.value==='Cicilan') cicilBox.classList.remove('d-none');
+function load(){
+  produk.innerHTML='<option value="">Produk</option>';
+  products.forEach(p=> produk.innerHTML+=`<option value="${p.nama}">${p.nama}</option>`);
 }
+
+function addCart(){
+  const p=products.find(x=>x.nama===produk.value);
+  if(!p||qty.value<=0) return;
+  cartData.push({...p,qty:+qty.value});
+  p.stok-=+qty.value;
+  localStorage.setItem('products',JSON.stringify(products));
+  renderCart();
+}
+
+function renderCart(){
+  cart.innerHTML=''; let tot=0;
+  cartData.forEach((c,i)=>{
+    const sub=c.jual*c.qty; tot+=sub;
+    cart.innerHTML+=`<tr><td>${c.nama}</td><td>${c.qty}</td><td>${c.jual}</td><td>${sub}</td><td><button class='btn btn-danger btn-sm' onclick='del(${i})'>X</button></td></tr>`;
+  });
+  total.innerText=tot;
+}
+
+function del(i){cartData.splice(i,1);renderCart();}
+
+function ubahMetode(){cashBox.classList.add('d-none');tfBox.classList.add('d-none');cicilBox.classList.add('d-none');
+ if(metode.value==='Cash') cashBox.classList.remove('d-none');
+ if(metode.value==='Transfer') tfBox.classList.remove('d-none');
+ if(metode.value==='Cicilan') cicilBox.classList.remove('d-none');}
 
 function hitungCicilan(){
-  const t = +total.value;
-  const n = +tenor.value;
-  const adminFee = t*0.25;
-  const bungaTotal = t*(bunga[n]/100)*n;
-  const grandTotal = t + adminFee + bungaTotal;
-  const per = Math.round(grandTotal/n);
-
-  admin.innerText='Rp '+adminFee.toLocaleString();
-  grand.innerText='Rp '+grandTotal.toLocaleString();
-  perbulan.innerText='Rp '+per.toLocaleString();
-  rincian.classList.remove('d-none');
-
-  return {grandTotal, per};
+ const t=+total.innerText; const n=+tenor.value;
+ const admin=t*0.25; const bungaTot=t*(bunga[n]/100)*n;
+ const grand=t+admin+bungaTot; const per=Math.round(grand/n);
+ rincian.innerHTML=`Admin: Rp ${admin}<br>Total Kredit: Rp ${grand}<br>Cicilan/Bulan: Rp ${per}`;
+ return {grand};
 }
 
-function simpan(){
-  if(!metode.value || !total.value){
-    Swal.fire('Error','Lengkapi data','error'); return;
-  }
-
-  let status='Lunas', sisa=0;
-
-  if(metode.value==='Cicilan'){
-    const h = hitungCicilan();
-    status='Belum Lunas';
-    sisa=h.grandTotal;
-  }
-
-  transaksi.push({
-    invoice:invoice.value,
-    customer:customer.value,
-    metode:metode.value,
-    total:+total.value,
-    status:status,
-    sisa:sisa
-  });
-
-  localStorage.setItem('transaksi', JSON.stringify(transaksi));
-  Swal.fire('Berhasil','Transaksi disimpan','success');
-  render();
+function checkout(){
+ let status='Lunas',sisa=0;
+ if(metode.value==='Cicilan'){const h=hitungCicilan();status='Belum Lunas';sisa=h.grand;}
+ transaksi.push({invoice:invoice.value,total:+total.innerText,metode:metode.value,status,sisa});
+ localStorage.setItem('transaksi',JSON.stringify(transaksi));
+ Swal.fire('Sukses','Transaksi berhasil','success');
+ renderPiutang();
 }
 
-function render(){
-  table.innerHTML='';
-  transaksi.forEach(t=>{
-    table.innerHTML+=`
-      <tr>
-        <td>${t.invoice}</td>
-        <td>${t.customer||'-'}</td>
-        <td>${t.metode}</td>
-        <td>Rp ${t.total}</td>
-        <td>${t.status}</td>
-        <td>Rp ${t.sisa||0}</td>
-      </tr>`;
-  });
+function renderPiutang(){
+ piutang.innerHTML='';
+ transaksi.filter(t=>t.metode==='Cicilan').forEach(t=>{
+  piutang.innerHTML+=`<tr><td>${t.invoice}</td><td>${t.total}</td><td>${t.sisa}</td><td>${t.status}</td></tr>`;
+ });
 }
 
-render();
+load();renderPiutang();
 </script>
 </body>
-                                             </html>
-  
+  </html>
