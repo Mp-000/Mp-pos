@@ -74,11 +74,24 @@ const menus = {
   'Owner':['Dashboard','Laporan']
 };
 
-menus[role].forEach(m=>{
-  menu.innerHTML += `<a href="#" class="list-group-item list-group-item-action">${m}</a>`;
-});
+  
+// ========const links = {
+  'Dashboard':'dashboard.html',
+  'User':'user.html',
+  'Produk':'produk.html',
+  'Kategori':'kategori.html',
+  'Supplier':'supplier.html',
+  'POS':'pos.html',
+  'Laporan':'laporan.html'
+};
 
-// ================= DATA =================
+menus[role].forEach(m=>{
+  menu.innerHTML += `
+    <a href="${links[m]}" class="list-group-item list-group-item-action">
+      ${m}
+    </a>`;
+});
+  ========= DATA =================
 const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
 let total = transaksi.reduce((a,b)=>a+b.total,0);
 
